@@ -30,13 +30,13 @@ async def client():
 @pytest.mark.asyncio
 async def test_register(client):
     response = await client.post("/auth/register", json={
-        "email": "test@example.com",
-        "password": "password",
-        "full_name": "Test User"
+        "email": "admin@example.com",
+        "password": "string12345",
+        "full_name": "firstadmin"
     })
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == "test@example.com"
+    assert data["email"] == "admin@example.com"
 
 @pytest.mark.asyncio
 async def test_login(client):

@@ -31,8 +31,8 @@ async def client():
 async def test_create_course(client):
     # Register admin
     await client.post("/auth/register", json={
-        "email": "admin@example.com",
-        "password": "password",
+        "email": "admin2@example.com",
+        "password": "string12345",
         "full_name": "Admin User"
     })
     # Assume role is set to admin somehow, but in code, default student, so need to update or create admin user.
