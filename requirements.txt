@@ -11,3 +11,4 @@ httpx
 pytest-asyncio
 alembic
 pydantic-settings
+email-validator
