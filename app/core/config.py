@@ -1,7 +1,6 @@
 from pydantic_settings import BaseSettings
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-import ssl
 
 class Settings(BaseSettings):
     DATABASE_URL: str
@@ -14,20 +13,13 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Create proper SSL context for Supabase
-ssl_context = ssl.create_default_context()
-ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE
-
+# Simplified engine creation - let asyncpg handle SSL automatically
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=True,
+    echo=False,  # Set to False in production
     pool_pre_ping=True,
-    connect_args={
-        "ssl": ssl_context,
-        "timeout": 30,
-        # DO NOT use 'family' - asyncpg/uvloop doesn't support it
-    }
+    pool_size=5,
+    max_overflow=10,
 )
 
 AsyncSessionLocal = sessionmaker(

@@ -1,3 +1,15 @@
+import sys
+import asyncio
+
+# CRITICAL: Force standard asyncio instead of uvloop for Leapcell compatibility
+# Must be before ANY other imports that might use asyncio
+if 'uvloop' in sys.modules:
+    del sys.modules['uvloop']
+
+# Set asyncio policy to standard implementation
+asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
+
+
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from sqlalchemy import text
