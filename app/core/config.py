@@ -1,6 +1,8 @@
 from pydantic_settings import BaseSettings
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+import ssl
+import socket
 
 class Settings(BaseSettings):
     DATABASE_URL: str
@@ -13,15 +15,21 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Create engine with SSL for Supabase
+# Create proper SSL context for Supabase
+ssl_context = ssl.create_default_context()
+
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=True,
+    pool_pre_ping=True,
     connect_args={
-        "ssl": "require"  # asyncpg uses 'ssl' not 'sslmode'
+        "ssl": ssl_context,
+        "family": socket.AF_INET  # FORCE IPv4 (critical for Leapcell)
     }
 )
 
 AsyncSessionLocal = sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
 )
