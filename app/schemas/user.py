@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
+from pydantic import BaseModel, EmailStr, ConfigDict, field_validator, Field
 from typing import Optional
+from uuid import UUID
 from app.models.user import Role
 
 class UserBase(BaseModel):
@@ -7,7 +8,7 @@ class UserBase(BaseModel):
     full_name: str
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(..., min_length=8, max_length=72)
     role: Optional[Role] = Role.student
     
     @field_validator('password')
@@ -34,7 +35,7 @@ class UserUpdate(BaseModel):
     role: Optional[Role] = None
 
 class User(UserBase):
-    id: int
+    id: UUID  # ✅ Changed from int to UUID
     is_active: bool
     role: Role
 

@@ -6,6 +6,7 @@ from app.schemas.enrollment import Enrollment, EnrollmentCreate
 from app.models.enrollment import Enrollment as EnrollmentModel
 from app.models.course import Course
 from app.models.user import User
+from uuid import UUID
 
 router = APIRouter()
 
@@ -40,8 +41,52 @@ async def enroll_course(enrollment: EnrollmentCreate, db: AsyncSession = Depends
     await db.refresh(db_enrollment)
     return db_enrollment
 
+@router.post("/admin/enroll", response_model=Enrollment)
+async def admin_enroll_course(
+    enrollment: EnrollmentCreate, 
+    db: AsyncSession = Depends(get_db), 
+    current_user: User = Depends(get_current_admin)
+):
+    """Admin endpoint to enroll any user in any course"""
+    # Verify user exists
+    user_result = await db.execute(select(User).where(User.id == enrollment.user_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check course exists and active
+    course_result = await db.execute(select(Course).where(Course.id == enrollment.course_id))
+    course = course_result.scalar_one_or_none()
+    if not course or not course.is_active:
+        raise HTTPException(status_code=400, detail="Course not available")
+    
+    # Check capacity
+    enrolled_count_result = await db.execute(
+        select(func.count(EnrollmentModel.id)).where(EnrollmentModel.course_id == enrollment.course_id)
+    )
+    enrolled_count = enrolled_count_result.scalar()
+    if enrolled_count >= course.capacity:
+        raise HTTPException(status_code=400, detail="Course is full")
+    
+    # Check not already enrolled
+    existing_result = await db.execute(
+        select(EnrollmentModel).where(
+            EnrollmentModel.user_id == enrollment.user_id,
+            EnrollmentModel.course_id == enrollment.course_id
+        )
+    )
+    if existing_result.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="User already enrolled in this course")
+    
+    # Create enrollment
+    db_enrollment = EnrollmentModel(**enrollment.dict())
+    db.add(db_enrollment)
+    await db.commit()
+    await db.refresh(db_enrollment)
+    return db_enrollment
+
 @router.delete("/{enrollment_id}")
-async def deregister_course(enrollment_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_student)):
+async def deregister_course(enrollment_id: UUID, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_student)):
     result = await db.execute(select(EnrollmentModel).where(EnrollmentModel.id == enrollment_id))
     enrollment = result.scalar_one_or_none()
     if not enrollment or enrollment.user_id != current_user.id:

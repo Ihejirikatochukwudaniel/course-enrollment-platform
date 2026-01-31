@@ -5,6 +5,7 @@ from app.dependencies.auth_dependencies import get_db, get_current_admin
 from app.schemas.course import Course, CourseCreate, CourseUpdate
 from app.models.course import Course as CourseModel
 from app.models.user import User
+from uuid import UUID
 
 router = APIRouter()
 
@@ -27,7 +28,7 @@ async def create_course(course: CourseCreate, db: AsyncSession = Depends(get_db)
     return db_course
 
 @router.put("/{course_id}", response_model=Course)
-async def update_course(course_id: int, course: CourseUpdate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_admin)):
+async def update_course(course_id: UUID, course: CourseUpdate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_admin)):
     result = await db.execute(select(CourseModel).where(CourseModel.id == course_id))
     db_course = result.scalar_one_or_none()
     if not db_course:
@@ -40,7 +41,7 @@ async def update_course(course_id: int, course: CourseUpdate, db: AsyncSession =
     return db_course
 
 @router.delete("/{course_id}")
-async def delete_course(course_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_admin)):
+async def delete_course(course_id: UUID, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_admin)):
     result = await db.execute(select(CourseModel).where(CourseModel.id == course_id))
     db_course = result.scalar_one_or_none()
     if not db_course:
