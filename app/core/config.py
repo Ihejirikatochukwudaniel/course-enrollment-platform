@@ -3,19 +3,20 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 class Settings(BaseSettings):
-    DATABASE_URL: str
-    SECRET_KEY: str
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    database_url: str
+    secret_key: str
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
 
     class Config:
         env_file = ".env"
+        case_sensitive = False  # Allows reading from uppercase env vars
 
 settings = Settings()
 
 # Simplified engine creation - let asyncpg handle SSL automatically
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    settings.database_url,
     echo=False,  # Set to False in production
     pool_pre_ping=True,
     pool_size=5,

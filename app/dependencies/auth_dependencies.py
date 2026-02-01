@@ -28,8 +28,8 @@ async def get_current_user(
     try:
         payload = jwt.decode(
             token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM],
+            settings.secret_key,  # ✅ Changed to lowercase
+            algorithms=[settings.algorithm],  # ✅ Changed to lowercase
         )
         email: str | None = payload.get("sub")
         if email is None:
